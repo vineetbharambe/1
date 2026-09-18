@@ -1,7 +1,8 @@
 /**
- * GET  /api/gigs  — List gigs with optional search, category filter, and sort.
+ * GET  /api/gigs  — List gigs with optional search, category filter, creator filter, and sort.
  *   ?search=   partial match on title or description (case-insensitive)
  *   ?category= exact match on category name
+ *   ?creator=  exact match on creatorName (used by dashboard)
  *   ?sort=     trust | newest | price_asc | price_desc  (default: trust)
  *
  * POST /api/gigs — Create a new gig.
@@ -17,6 +18,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 // Compute trust score for a gig (DP3)
 function computeTrustScore(
@@ -46,6 +49,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") ?? "";
     const category = searchParams.get("category") ?? "";
+    const creator = searchParams.get("creator") ?? "";
     const sort = searchParams.get("sort") ?? "trust";
 
     const gigs = await prisma.gig.findMany({
@@ -54,12 +58,13 @@ export async function GET(request: NextRequest) {
           search
             ? {
                 OR: [
-                  { title: { contains: search, mode: "insensitive" } },
-                  { description: { contains: search, mode: "insensitive" } },
+                  { title: { contains: search } },
+                  { description: { contains: search } },
                 ],
               }
             : {},
           category ? { category } : {},
+          creator ? { creatorName: creator } : {},
         ],
       },
       include: {

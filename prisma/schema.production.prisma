@@ -1,0 +1,40 @@
+// SkillSwap Prisma Schema — PRODUCTION (PostgreSQL / Neon)
+// Use this schema when deploying to Vercel.
+// Steps:
+//   1. Copy this to prisma/schema.prisma
+//   2. Run: npx prisma migrate deploy
+//   3. Set DATABASE_URL in Vercel env to your Neon postgres connection string
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Gig {
+  id                 String    @id @default(cuid())
+  creatorName        String
+  title              String
+  category           String
+  rate               Float
+  description        String
+  concurrentCapacity Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  bookings           Booking[]
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  gigId         String
+  gig           Gig      @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  clientName    String
+  note          String?
+  status        String   @default("Pending")
+  declineReason String?
+  requestedAt   DateTime @default(now())
+}

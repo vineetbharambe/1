@@ -1,15 +1,16 @@
 // SkillSwap Prisma Schema
-// Supports SQLite for local dev and PostgreSQL (Neon) for production.
-// Switch provider and URL via environment variables.
-// DB_PROVIDER=sqlite + DATABASE_URL=file:./dev.db for local
-// DB_PROVIDER=postgresql + DATABASE_URL=postgres://... for Neon/Vercel
+// LOCAL DEV: provider = "sqlite", DATABASE_URL = "file:./dev.db"
+// PRODUCTION: Change provider to "postgresql", set DATABASE_URL to your Neon connection string.
+// Note: Prisma does not support dynamic provider switching via env() — 
+// for production deploy, swap the provider value below before running prisma migrate deploy.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = env("DB_PROVIDER")
+  // Change to "postgresql" for production (Neon/Vercel)
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -32,21 +33,8 @@ model Booking {
   gig           Gig            @relation(fields: [gigId], references: [id], onDelete: Cascade)
   clientName    String
   note          String?
-  status        BookingStatus  @default(Pending)
-  declineReason DeclineReason?
+  status        String         @default("Pending")
+  declineReason String?
   requestedAt   DateTime       @default(now())
 }
 
-enum BookingStatus {
-  Pending
-  Accepted
-  Declined
-  Waitlisted
-}
-
-enum DeclineReason {
-  FullyBooked
-  NotAFit
-  RateMismatch
-  Other
-}
