@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillSwap — Creator Gig Marketplace</title>
+  <meta name="description" content="Book top creator talent — or sell your skills — instantly. No signup, ever.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #FAF8F5; color: #1e293b; }
+    .hero-gradient { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%); }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href="#" class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md font-extrabold text-lg">⚡</div>
+          <span class="font-extrabold text-xl tracking-tight text-slate-900">Skill<span class="text-indigo-600">Swap</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-1 text-sm font-semibold">
+          <button onclick="switchTab('marketplace')" id="tab-marketplace" class="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700">Browse</button>
+          <button onclick="switchTab('bookings')" id="tab-bookings" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-50">My Bookings</button>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Persona Toggle -->
+        <div class="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-semibold">
+          <button id="btn-client" onclick="setRole('Client')" class="px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-sm transition-all">I'm a Client</button>
+          <button id="btn-creator" onclick="setRole('Creator')" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">I'm a Creator</button>
+        </div>
+        
+        <!-- Post Gig Button for Creators -->
+        <button id="btn-post-gig" onclick="openPostModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm">+ Post Gig</button>
+
+        <!-- User Name Label -->
+        <button onclick="changeUserName()" id="user-badge" class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100">
+          <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold" id="user-avatar">U</span>
+          <span id="user-name-display">User</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Marketplace Content -->
+  <main id="content-marketplace" class="flex-1">
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-14 px-4">
+      <div class="max-w-3xl mx-auto text-center">
+        <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-indigo-200 mb-4 border border-white/10">
+          ✨ 24h Hackathon Build — Creator Gig Marketplace
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-extrabold mb-3 tracking-tight leading-tight">
+          Where creators cash in <br><span class="text-violet-200">on what they know.</span>
+        </h1>
+        <p class="text-indigo-100 text-base sm:text-lg mb-8 max-w-xl mx-auto opacity-90">
+          Book top creator talent — or sell your skills — instantly. No signup required.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="relative max-w-xl mx-auto">
+          <input type="text" id="search-input" oninput="renderGigs()" placeholder="Search gigs by title or description..." 
+            class="w-full bg-white/15 backdrop-blur text-white placeholder-indigo-200 border border-white/20 rounded-2xl pl-11 pr-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/40 shadow-inner">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-200">🔍</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters & Toolbar -->
+    <div class="sticky top-16 z-30 bg-[#FAF8F5]/95 backdrop-blur border-b border-slate-200 py-3 px-4">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <!-- Categories -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto scrollbar-none" id="categories-container">
+          <!-- Dynamic Category buttons rendered here -->
+        </div>
+
+        <!-- Sort Select -->
+        <div class="flex items-center gap-2 flex-shrink-0 self-end md:self-auto">
+          <span class="text-xs font-medium text-slate-500">Sort by:</span>
+          <select id="sort-select" onchange="renderGigs()" class="text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <option value="trust">Trust Score ✦</option>
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low → High</option>
+            <option value="price_desc">Price: High → Low</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gig Cards Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div id="gigs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Cards rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- My Bookings Content (Hidden by default) -->
+  <main id="content-bookings" class="flex-1 max-w-5xl mx-auto px-4 py-8 w-full hidden">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-slate-900">My Bookings</h2>
+        <p class="text-sm text-slate-500">Track orders and status updates tagged to <span id="booking-user-tag" class="font-bold text-indigo-600">User</span></p>
+      </div>
+    </div>
+    <div id="bookings-list" class="space-y-4">
+      <!-- Bookings rendered here -->
+    </div>
+  </main>
+
+  <!-- Modal: Book Gig -->
+  <div id="modal-book" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+      <button onclick="closeBookModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-600">✕</button>
+      <h3 class="text-xl font-bold text-slate-900 mb-1" id="book-gig-title">Book Gig</h3>
+      <p class="text-xs text-slate-500 mb-4" id="book-gig-creator">Creator: Alex Rivera</p>
+      
+      <form onsubmit="confirmBooking(event)" class="space-y-4">
+        <input type="hidden" id="book-gig-id">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Your Name</label>
+          <input type="text" id="book-client-name" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Project Instructions & Requirements</label>
+          <textarea id="book-instructions" rows="3" required placeholder="Describe what you need done..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+        </div>
+        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex justify-between items-center text-xs font-semibold text-indigo-900">
+          <span>Total Price</span>
+          <span id="book-gig-price" class="text-base font-extrabold text-indigo-600">$75</span>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-md">Confirm Instant Booking 🚀</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Post Gig -->
+  <div id="modal-post" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <button onclick="closePostModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-600">✕</button>
+      <h3 class="text-xl font-bold text-slate-900 mb-4">Post a New Gig</h3>
+      
+      <form onsubmit="submitNewGig(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Gig Title</label>
+          <input type="text" id="post-title" required placeholder="e.g. I'll edit your YouTube Shorts" class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+            <select id="post-category" class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Video Editing">Video Editing</option>
+              <option value="Thumbnail Design">Thumbnail Design</option>
+              <option value="Podcast Editing">Podcast Editing</option>
+              <option value="TikTok/Shorts Growth">TikTok/Shorts Growth</option>
+              <option value="Brand Deal Negotiation Help">Brand Deal Negotiation</option>
+              <option value="Discord/Community Management">Discord Management</option>
+              <option value="Newsletter Writing">Newsletter Writing</option>
+              <option value="Voiceover">Voiceover</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Rate ($ USD)</label>
+            <input type="number" id="post-rate" required min="5" placeholder="75" class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Description</label>
+          <textarea id="post-desc" rows="3" required placeholder="Describe your service..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">Publish Gig Now ✨</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl transition-all duration-300 transform translate-y-20 opacity-0 flex items-center gap-2">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">Booking confirmed!</span>
+  </div>
+
+  <!-- JavaScript App Engine -->
+  <script>
+    const INITIAL_GIGS = [
+      { id: "g1", creatorName: "Alex Rivera", title: "I'll edit your YouTube video in 24 hours with viral-worthy cuts", category: "Video Editing", rate: 75, description: "Professional video editor with 5 years of YouTube experience. Specializing in fast-paced cuts, color grading, sound design, and thumbnails. Delivered 200+ videos.", concurrentCapacity: 3, trustScore: 98, acceptedCount: 3, totalBookings: 4, createdAt: "2026-09-18" },
+      { id: "g2", creatorName: "Maya Chen", title: "Scroll-stopping YouTube thumbnail designs that boost your CTR", category: "Thumbnail Design", rate: 45, description: "I design thumbnails that get clicks. Average CTR improvement of 40% across my clients' channels. Bold fonts, high contrast, and attention-grabbing designs.", concurrentCapacity: 5, trustScore: 92, acceptedCount: 3, totalBookings: 3, createdAt: "2026-09-17" },
+      { id: "g3", creatorName: "Jordan Kim", title: "Professional podcast editing — clean, crisp, ready to publish", category: "Podcast Editing", rate: 60, description: "Remove ums, ahs, and long silences. Add intro/outro music, normalize audio, and export in your preferred format. Standard episodes delivered in 48h.", concurrentCapacity: 4, trustScore: 85, acceptedCount: 1, totalBookings: 2, createdAt: "2026-09-16" },
+      { id: "g4", creatorName: "Sam Torres", title: "TikTok & Shorts growth strategy — from 0 to 10K in 90 days", category: "TikTok/Shorts Growth", rate: 120, description: "I've helped 15 creators hit 10K–100K followers on TikTok and YouTube Shorts. Content calendar, hook coaching, pacing, and trending sounds.", concurrentCapacity: 2, trustScore: 89, acceptedCount: 1, totalBookings: 1, createdAt: "2026-09-15" },
+      { id: "g5", creatorName: "Priya Patel", title: "Brand deal negotiation help — get paid what you're worth", category: "Brand Deal Negotiation Help", rate: 150, description: "Ex-talent manager. I've negotiated $500K+ in brand deals for creators. I'll audit your rate card, review contracts, handle counter-offers.", concurrentCapacity: 2, trustScore: 78, acceptedCount: 0, totalBookings: 1, createdAt: "2026-09-14" },
+      { id: "g6", creatorName: "Chris Walker", title: "Discord & community management — keep your fans engaged daily", category: "Discord/Community Management", rate: 35, description: "Full-time community manager for creator Discord servers. Moderation, welcome flows, engagement events, and weekly reports.", concurrentCapacity: 6, trustScore: 82, acceptedCount: 1, totalBookings: 1, createdAt: "2026-09-13" },
+      { id: "g7", creatorName: "Elena Russo", title: "Newsletter writing that converts — from draft to send in 48h", category: "Newsletter Writing", rate: 85, description: "Ghostwrite your weekly or bi-weekly creator newsletter. I research, write, edit, and format for Beehiiv, ConvertKit, or Substack.", concurrentCapacity: 4, trustScore: 75, acceptedCount: 0, totalBookings: 1, createdAt: "2026-09-12" },
+      { id: "g8", creatorName: "Devon Brooks", title: "Warm, professional voiceover for your YouTube ads and intros", category: "Voiceover", rate: 55, description: "Studio-quality voiceover with a Rode NT1 and dedicated recording space. Warm, conversational tone perfect for YouTube ads and intros.", concurrentCapacity: 8, trustScore: 84, acceptedCount: 1, totalBookings: 1, createdAt: "2026-09-11" }
+    ];
+
+    const CATEGORIES = ["All", "Video Editing", "Thumbnail Design", "Podcast Editing", "TikTok/Shorts Growth", "Brand Deal Negotiation Help", "Discord/Community Management", "Newsletter Writing", "Voiceover"];
+
+    // App State
+    let currentRole = localStorage.getItem("skillswap_role") || "Client";
+    let currentUser = localStorage.getItem("skillswap_user") || "vineetbharambe";
+    let selectedCategory = "All";
+    let gigs = JSON.parse(localStorage.getItem("skillswap_gigs")) || INITIAL_GIGS;
+    let bookings = JSON.parse(localStorage.getItem("skillswap_bookings")) || [
+      { id: "b1", gigTitle: "YouTube Video Edit 24h", creatorName: "Alex Rivera", clientName: currentUser, status: "Accepted", instructions: "Edit 15 min vlog with fast cuts", date: "2026-09-18" }
+    ];
+
+    function init() {
+      localStorage.setItem("skillswap_user", currentUser);
+      localStorage.setItem("skillswap_role", currentRole);
+      updateUserDisplay();
+      renderCategories();
+      renderGigs();
+      renderBookings();
+    }
+
+    function setRole(role) {
+      currentRole = role;
+      localStorage.setItem("skillswap_role", role);
+      document.getElementById("btn-client").className = role === 'Client' ? "px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-sm transition-all font-bold" : "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all font-semibold";
+      document.getElementById("btn-creator").className = role === 'Creator' ? "px-3 py-1.5 rounded-lg bg-white text-indigo-700 shadow-sm transition-all font-bold" : "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all font-semibold";
+      document.getElementById("btn-post-gig").style.display = role === 'Creator' ? 'inline-block' : 'none';
+      showToast("👤 Switched to " + role + " mode");
+    }
+
+    function changeUserName() {
+      const name = prompt("Enter your display name:", currentUser);
+      if (name && name.trim()) {
+        currentUser = name.trim();
+        localStorage.setItem("skillswap_user", currentUser);
+        updateUserDisplay();
+        showToast("Updated display name to " + currentUser);
+      }
+    }
+
+    function updateUserDisplay() {
+      document.getElementById("user-name-display").innerText = currentUser;
+      document.getElementById("user-avatar").innerText = currentUser.charAt(0).toUpperCase();
+      document.getElementById("booking-user-tag").innerText = currentUser;
+    }
+
+    function renderCategories() {
+      const container = document.getElementById("categories-container");
+      container.innerHTML = CATEGORIES.map(cat => `
+        <button onclick="selectCategory('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300'}">
+          ${cat}
+        </button>
+      `).join("");
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategories();
+      renderGigs();
+    }
+
+    function renderGigs() {
+      const search = document.getElementById("search-input").value.toLowerCase();
+      const sort = document.getElementById("sort-select").value;
+
+      let filtered = gigs.filter(g => {
+        const matchesCategory = selectedCategory === "All" || g.category === selectedCategory;
+        const matchesSearch = g.title.toLowerCase().includes(search) || g.description.toLowerCase().includes(search) || g.creatorName.toLowerCase().includes(search);
+        return matchesCategory && matchesSearch;
+      });
+
+      if (sort === "trust") filtered.sort((a,b) => b.trustScore - a.trustScore);
+      if (sort === "newest") filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      if (sort === "price_asc") filtered.sort((a,b) => a.rate - b.rate);
+      if (sort === "price_desc") filtered.sort((a,b) => b.rate - a.rate);
+
+      const grid = document.getElementById("gigs-grid");
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-12 text-center"><span class="text-4xl">🧐</span><h3 class="text-lg font-bold text-slate-800 mt-2">No gigs found</h3><p class="text-xs text-slate-500">Try changing search keywords or category filters.</p></div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(g => `
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">${g.category}</span>
+              <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">✦ ${g.trustScore} Trust</span>
+            </div>
+            <h3 class="font-extrabold text-slate-900 text-base leading-snug mb-2">${g.title}</h3>
+            <p class="text-xs text-slate-600 line-clamp-2 mb-4">${g.description}</p>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 mb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center text-[10px]">${g.creatorName.charAt(0)}</div>
+                <span class="text-xs font-semibold text-slate-700">${g.creatorName}</span>
+              </div>
+              <span class="text-base font-extrabold text-slate-900">$${g.rate}</span>
+            </div>
+
+            <button onclick="openBookModal('${g.id}')" class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-sm">
+              Book Gig Now →
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openBookModal(gigId) {
+      const gig = gigs.find(g => g.id === gigId);
+      if (!gig) return;
+      document.getElementById("book-gig-id").value = gig.id;
+      document.getElementById("book-gig-title").innerText = gig.title;
+      document.getElementById("book-gig-creator").innerText = "Creator: " + gig.creatorName;
+      document.getElementById("book-gig-price").innerText = "$" + gig.rate;
+      document.getElementById("book-client-name").value = currentUser;
+      document.getElementById("modal-book").classList.remove("hidden");
+    }
+
+    function closeBookModal() {
+      document.getElementById("modal-book").classList.add("hidden");
+    }
+
+    function confirmBooking(e) {
+      e.preventDefault();
+      const gigId = document.getElementById("book-gig-id").value;
+      const instructions = document.getElementById("book-instructions").value;
+      const clientName = document.getElementById("book-client-name").value;
+      const gig = gigs.find(g => g.id === gigId);
+
+      const newBooking = {
+        id: "b" + Date.now(),
+        gigTitle: gig.title,
+        creatorName: gig.creatorName,
+        clientName: clientName,
+        status: "Pending",
+        instructions: instructions,
+        date: new Date().toISOString().split("T")[0]
+      };
+
+      bookings.unshift(newBooking);
+      localStorage.setItem("skillswap_bookings", JSON.stringify(bookings));
+      closeBookModal();
+      renderBookings();
+      showToast("🎉 Booking submitted to " + gig.creatorName + "!");
+    }
+
+    function openPostModal() {
+      document.getElementById("modal-post").classList.remove("hidden");
+    }
+    function closePostModal() {
+      document.getElementById("modal-post").classList.add("hidden");
+    }
+
+    function submitNewGig(e) {
+      e.preventDefault();
+      const title = document.getElementById("post-title").value;
+      const category = document.getElementById("post-category").value;
+      const rate = parseFloat(document.getElementById("post-rate").value);
+      const desc = document.getElementById("post-desc").value;
+
+      const newGig = {
+        id: "g" + Date.now(),
+        creatorName: currentUser,
+        title: title,
+        category: category,
+        rate: rate,
+        description: desc,
+        concurrentCapacity: 3,
+        trustScore: 85,
+        acceptedCount: 0,
+        totalBookings: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      gigs.unshift(newGig);
+      localStorage.setItem("skillswap_gigs", JSON.stringify(gigs));
+      closePostModal();
+      renderGigs();
+      showToast("✨ Gig published successfully!");
+    }
+
+    function renderBookings() {
+      const container = document.getElementById("bookings-list");
+      if (bookings.length === 0) {
+        container.innerHTML = `<div class="bg-white rounded-2xl p-8 border border-slate-200 text-center"><p class="text-sm text-slate-500">No active bookings yet.</p></div>`;
+        return;
+      }
+
+      container.innerHTML = bookings.map(b => `
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${b.status === 'Accepted' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${b.status}</span>
+              <span class="text-xs text-slate-400">• ${b.date}</span>
+            </div>
+            <h4 class="font-extrabold text-slate-900 text-base">${b.gigTitle}</h4>
+            <p class="text-xs text-slate-600 mt-1">Creator: <span class="font-semibold text-slate-800">${b.creatorName}</span> | Client: <span class="font-semibold text-slate-800">${b.clientName}</span></p>
+            <p class="text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2 rounded-lg mt-2 font-mono">"${b.instructions}"</p>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function switchTab(tab) {
+      if (tab === 'marketplace') {
+        document.getElementById("content-marketplace").classList.remove("hidden");
+        document.getElementById("content-bookings").classList.add("hidden");
+        document.getElementById("tab-marketplace").className = "px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold";
+        document.getElementById("tab-bookings").className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-50 font-semibold";
+      } else {
+        document.getElementById("content-marketplace").classList.add("hidden");
+        document.getElementById("content-bookings").classList.remove("hidden");
+        document.getElementById("tab-bookings").className = "px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold";
+        document.getElementById("tab-marketplace").className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-50 font-semibold";
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-msg").innerText = msg;
+      toast.classList.remove("translate-y-20", "opacity-0");
+      setTimeout(() => {
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 3000);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
