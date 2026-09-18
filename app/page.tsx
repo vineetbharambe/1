@@ -6,7 +6,7 @@ import { Search, SlidersHorizontal, X, TrendingUp } from "lucide-react";
 import GigCard from "@/components/GigCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import EmptyState from "@/components/EmptyState";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, INITIAL_SAMPLE_GIGS } from "@/lib/constants";
 
 interface Gig {
   id: string;
@@ -48,9 +48,15 @@ function MarketplaceContent() {
       if (sort) params.set("sort", sort);
       const res = await fetch(`/api/gigs?${params.toString()}`);
       const data = await res.json();
-      setGigs(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0) {
+        setGigs(data);
+      } else if (!search && !category) {
+        setGigs(INITIAL_SAMPLE_GIGS as Gig[]);
+      } else {
+        setGigs([]);
+      }
     } catch {
-      setGigs([]);
+      setGigs(!search && !category ? (INITIAL_SAMPLE_GIGS as Gig[]) : []);
     } finally {
       setLoading(false);
     }
