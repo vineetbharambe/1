@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const creator = searchParams.get("creator") ?? "";
     const sort = searchParams.get("sort") ?? "trust";
 
-    const gigs = await prisma.gig.findMany({
+    let gigs = await prisma.gig.findMany({
       where: {
         AND: [
           search
@@ -79,6 +79,93 @@ export async function GET(request: NextRequest) {
           ? { rate: "desc" }
           : { createdAt: "desc" }, // trust sort applied after
     });
+
+    // Auto-seed sample gigs if database is empty on first deployment
+    if (gigs.length === 0 && !search && !category && !creator) {
+      const sampleGigs = [
+        {
+          creatorName: "Alex Rivera",
+          title: "I'll edit your YouTube video in 24 hours with viral-worthy cuts",
+          category: "Video Editing",
+          rate: 75,
+          description:
+            "Professional video editor with 5 years of YouTube experience. Specializing in fast-paced cuts, color grading, sound design, and thumbnails. Delivered 200+ videos for channels ranging from 10K to 2M subscribers.",
+          concurrentCapacity: 3,
+        },
+        {
+          creatorName: "Maya Chen",
+          title: "Scroll-stopping YouTube thumbnail designs that boost your CTR",
+          category: "Thumbnail Design",
+          rate: 45,
+          description:
+            "I design thumbnails that get clicks. Average CTR improvement of 40% across my clients' channels. Bold fonts, high contrast, and attention-grabbing designs. Delivery in 12 hours.",
+          concurrentCapacity: 5,
+        },
+        {
+          creatorName: "Jordan Kim",
+          title: "Professional podcast editing — clean, crisp, ready to publish",
+          category: "Podcast Editing",
+          rate: 60,
+          description:
+            "Remove ums, ahs, and long silences. Add intro/outro music, normalize audio, and export in your preferred format. Standard episodes (60 min) delivered within 48 hours.",
+          concurrentCapacity: 4,
+        },
+        {
+          creatorName: "Sam Torres",
+          title: "TikTok & Shorts growth strategy — from 0 to 10K in 90 days",
+          category: "TikTok/Shorts Growth",
+          rate: 120,
+          description:
+            "I've helped 15 creators hit 10K–100K followers on TikTok and YouTube Shorts. I analyze your niche, create a content calendar, coach on hooks, pacing, and trending sounds.",
+          concurrentCapacity: 2,
+        },
+        {
+          creatorName: "Priya Patel",
+          title: "Brand deal negotiation help — get paid what you're worth",
+          category: "Brand Deal Negotiation Help",
+          rate: 150,
+          description:
+            "Ex-talent manager. I've negotiated $500K+ in brand deals for creators. I'll audit your rate card, review contracts, handle counter-offers, and coach you on deliverables.",
+          concurrentCapacity: 2,
+        },
+        {
+          creatorName: "Chris Walker",
+          title: "Discord & community management — keep your fans engaged daily",
+          category: "Discord/Community Management",
+          rate: 35,
+          description:
+            "Full-time community manager for creator Discord servers. Moderation, welcome flows, engagement events, and weekly reports. Available 7 days a week.",
+          concurrentCapacity: 6,
+        },
+        {
+          creatorName: "Elena Russo",
+          title: "Newsletter writing that converts — from draft to send in 48h",
+          category: "Newsletter Writing",
+          rate: 85,
+          description:
+            "Ghostwrite your weekly or bi-weekly creator newsletter. I research, write, edit, and format for Beehiiv, ConvertKit, or Substack. Average open rate of 42%.",
+          concurrentCapacity: 4,
+        },
+        {
+          creatorName: "Devon Brooks",
+          title: "Warm, professional voiceover for your YouTube ads and intros",
+          category: "Voiceover",
+          rate: 55,
+          description:
+            "Studio-quality voiceover with a Rode NT1 and dedicated recording space. Warm, conversational tone perfect for YouTube ads, course intros, and explainer videos.",
+          concurrentCapacity: 8,
+        },
+      ];
+
+      for (const gigData of sampleGigs) {
+        await prisma.gig.create({ data: gigData });
+      }
+
+      gigs = await prisma.gig.findMany({
+        include: { bookings: { select: { status: true } } },
+        orderBy: { createdAt: "desc" },
+      });
+    }
 
     // Annotate with counts
     const annotated = gigs.map((gig) => {
